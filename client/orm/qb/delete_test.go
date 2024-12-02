@@ -64,6 +64,16 @@ func TestDeleter_Build(t *testing.T) {
 				Args: []interface{}{uint64(1000)},
 			},
 		},
+		{
+			name: "Where_WhereMap_WhereRaw",
+			builder: NewDeleter[TestCombinedModel](db).Where(C("LastName").EQ("join")).
+				WhereMap(map[string]any{"Age": 18}).WhereRaw("`id` = ?", 1),
+			wantQuery: &Query{
+				// There are two spaces before NOT because we did not perform any special processing on NOT
+				SQL:  "DELETE FROM `test_combined_model` WHERE ((`last_name` = ?) AND (`age` = ?)) AND (`id` = ?  );",
+				Args: []any{"join", 18, 1},
+			},
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {

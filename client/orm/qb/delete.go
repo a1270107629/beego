@@ -76,10 +76,21 @@ func (d *Deleter[T]) From(table interface{}) *Deleter[T] {
 
 // Where accepts predicates
 func (d *Deleter[T]) Where(predicates ...Predicate) *Deleter[T] {
-	d.where = predicates
+	d.where = append(d.where, predicates...)
 	return d
 }
 
+func (d *Deleter[T]) WhereMap(conds map[string]any) *Deleter[T] {
+	for col, val := range conds {
+		ps := C(col).EQ(val)
+		d.Where(ps)
+	}
+	return d
+}
+
+func (d *Deleter[T]) WhereRaw(raw string, args ...any) *Deleter[T] {
+	return d.Where(Raw(raw, args...).AsPredicate())
+}
 // Exec sql
 func (d *Deleter[T]) Exec(ctx context.Context) Result {
 	q, err := d.Build()
